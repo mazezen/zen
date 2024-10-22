@@ -1,26 +1,25 @@
 package zen
 
 import (
-	"errors"
-	"fmt"
 	"net"
 	"net/http"
 	"sync"
 )
-
-type HandlerFunc func(w http.ResponseWriter, r *http.Request)
 
 type Zen struct {
 	zenMutex sync.RWMutex
 	color    *Color
 	Server   *http.Server
 	Listener net.Listener
-	router   map[string]HandlerFunc
+	router   *router
+	pool     sync.Pool
 
 	HideBanner bool
 
 	ListenerNetWork string
 }
+
+type HandlerFunc func(c *Context)
 
 // New create an instance of Zen
 func New() (z *Zen) {
@@ -28,25 +27,29 @@ func New() (z *Zen) {
 		color:           NewColor(),
 		Server:          new(http.Server),
 		ListenerNetWork: "tcp",
+		router:          newRouter(),
 	}
 	z.Server.Handler = z
-	z.router = map[string]HandlerFunc{}
 	return
 }
 
-func (z *Zen) addRoute(method, pattern string, handler HandlerFunc) {
-	key := method + "-" + pattern
-	z.router[key] = handler
+func (z *Zen) newContext(w http.ResponseWriter, r *http.Request) *Context {
+	return &Context{
+		r:      r,
+		w:      w,
+		path:   r.URL.Path,
+		method: r.Method,
+	}
 }
 
 // GET registers a new GET route for a path with matching handler in the router
 func (z *Zen) GET(pattern string, handler HandlerFunc) {
-	z.addRoute("GET", pattern, handler)
+	z.router.addRoute("GET", pattern, handler)
 }
 
 // POST registers a new POST route for a path with matching handler in the router
 func (z *Zen) POST(pattern string, handler HandlerFunc) {
-	z.addRoute("POST", pattern, handler)
+	z.router.addRoute("POST", pattern, handler)
 }
 
 // Start an http server
@@ -71,13 +74,8 @@ func (z *Zen) GetHideBanner() bool {
 }
 
 func (z *Zen) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	key := r.Method + "-" + r.URL.Path
-	if handler, ok := z.router[key]; ok {
-		handler(w, r)
-	} else {
-		w.WriteHeader(http.StatusNotFound)
-		fmt.Fprintf(w, "404 Not Found: %s\n", r.URL)
-	}
+	c := z.newContext(w, r)
+	z.router.handle(c)
 }
 
 func (z *Zen) configureServer(s *http.Server) error {
@@ -96,14 +94,6 @@ func (z *Zen) configureServer(s *http.Server) error {
 
 	return nil
 }
-
-var ErrInvalidListenerNetwork = errors.New("invalid listener network")
-
-const (
-	TcpNetwork  = "tcp"
-	TcpNet4work = "tcp4"
-	TcpNet6work = "tcp6"
-)
 
 type tcpKeepAliveListener struct {
 	*net.TCPListener
