@@ -17,7 +17,7 @@ type IContext interface {
 	SetStatusCode(code int)
 	SetHeader(name, value string)
 	String(code int, format string, values ...interface{})
-	Json(code int, content interface{})
+	JSON(code int, content interface{})
 	HTML(code int, content string)
 	Set(key string, value any)
 	Get(key string) any

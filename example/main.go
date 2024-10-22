@@ -89,6 +89,31 @@ func main() {
 		c.JSON(http.StatusOK, d)
 	})
 
+	// curl http://127.0.0.1:8888/v2/demo
+	v2 := z.Group("/v2")
+	v2.GET("/demo", func(c *zen.Context) {
+		c.String(http.StatusOK, "demo router group!")
+	})
+
+	// curl "http://127.0.0.1:8888/v2/post" -X POST -d 'name=zen&email=zen@gmail.com'
+	v2.POST("/post", func(c *zen.Context) {
+		type Data struct {
+			Name    string            `json:"name"`
+			Email   string            `json:"email"`
+			DataMap map[string]string `json:"data_map"`
+		}
+		d := &Data{
+			Name:  c.FormValue("name"),
+			Email: c.FormValue("email"),
+			DataMap: map[string]string{
+				"name":  c.FormValue("name"),
+				"email": c.FormValue("email"),
+			},
+		}
+
+		c.JSON(http.StatusOK, d)
+	})
+
 	if err := z.Start(":8888"); err != nil {
 		log.Printf("zen start error: %v", err)
 	}

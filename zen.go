@@ -7,6 +7,10 @@ import (
 	"sync"
 )
 
+type HandlerFunc func(c *Context)
+
+type MiddlewareFunc func(next HandlerFunc) HandlerFunc
+
 type Zen struct {
 	zenMutex sync.RWMutex
 	color    *Color
@@ -17,10 +21,10 @@ type Zen struct {
 
 	HideBanner bool
 
+	groups []*Group
+
 	ListenerNetWork string
 }
-
-type HandlerFunc func(c *Context)
 
 // New create an instance of Zen
 func New() (z *Zen) {
@@ -140,4 +144,13 @@ func newListener(address, network string) (*tcpKeepAliveListener, error) {
 		return nil, err
 	}
 	return &tcpKeepAliveListener{l.(*net.TCPListener)}, nil
+}
+
+func (z *Zen) Group(prefix string) *Group {
+	ng := &Group{
+		prefix: prefix,
+		zen:    z,
+	}
+	z.groups = append(z.groups, ng)
+	return ng
 }
