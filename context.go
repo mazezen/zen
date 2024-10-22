@@ -26,8 +26,9 @@ type IContext interface {
 }
 
 type Context struct {
-	r *http.Request
-	w http.ResponseWriter
+	r   *http.Request
+	w   http.ResponseWriter
+	zen *Zen
 
 	// request info
 	query  url.Values
@@ -37,6 +38,9 @@ type Context struct {
 
 	// response info
 	StatusCode int
+
+	middlewares []HandlerFunc
+	mx          int
 
 	store sync.Map
 }
@@ -76,7 +80,7 @@ func (c *Context) String(code int, format string, values ...interface{}) {
 	_, _ = c.w.Write([]byte(fmt.Sprintf(format, values...)))
 }
 
-// Json
+// JSON Json
 //
 //	c.Json(http.StatusOK, zen.H{
 //				"name":  c.Query("name"),
@@ -119,4 +123,12 @@ func (c *Context) GetAndDelete(key string) (any, bool) {
 // Delete delete data from context
 func (c *Context) Delete(key string) {
 	c.store.Delete(key)
+}
+
+func (c *Context) Next() {
+	c.mx++
+	s := len(c.middlewares)
+	for ; c.mx < s; c.mx++ {
+		c.middlewares[c.mx](c)
+	}
 }

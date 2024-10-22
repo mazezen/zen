@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/jeffcail/zen"
+	"github.com/jeffcail/zen/example/middlewares"
 	"log"
 	"net/http"
 	"strconv"
@@ -91,6 +92,7 @@ func main() {
 
 	// curl http://127.0.0.1:8888/v2/demo
 	v2 := z.Group("/v2")
+	v2.Use(middlewares.Demo())
 	v2.GET("/demo", func(c *zen.Context) {
 		c.String(http.StatusOK, "demo router group!")
 	})
@@ -110,6 +112,9 @@ func main() {
 				"email": c.FormValue("email"),
 			},
 		}
+
+		value := c.Get("example")
+		log.Println(value)
 
 		c.JSON(http.StatusOK, d)
 	})

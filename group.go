@@ -6,7 +6,7 @@ import (
 
 type Group struct {
 	prefix      string
-	middlewares []MiddlewareFunc
+	middlewares []HandlerFunc
 	zen         *Zen
 }
 
@@ -57,4 +57,9 @@ func (g *Group) Add(method string, pattern string, handlerFunc HandlerFunc) {
 func (g *Group) addRoute(method string, pattern string, handler HandlerFunc) {
 	p := g.prefix + pattern
 	g.zen.router.Add(method, p, handler)
+}
+
+// Use is defined to add middleware to the group
+func (g *Group) Use(middlewares ...HandlerFunc) {
+	g.middlewares = append(g.middlewares, middlewares...)
 }

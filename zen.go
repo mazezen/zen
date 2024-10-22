@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"strings"
 	"sync"
 )
 
 type HandlerFunc func(c *Context)
 
-type MiddlewareFunc func(next HandlerFunc) HandlerFunc
+type MiddlewareFunc func(c *Context) HandlerFunc
 
 type Zen struct {
 	zenMutex sync.RWMutex
@@ -20,6 +21,8 @@ type Zen struct {
 	pool     sync.Pool
 
 	HideBanner bool
+
+	middlewares []HandlerFunc
 
 	groups []*Group
 
@@ -40,10 +43,12 @@ func New() (z *Zen) {
 
 func (z *Zen) newContext(w http.ResponseWriter, r *http.Request) *Context {
 	return &Context{
+		zen:    z,
 		r:      r,
 		w:      w,
 		path:   r.URL.Path,
 		method: r.Method,
+		mx:     -1,
 	}
 }
 
@@ -87,6 +92,11 @@ func (z *Zen) TRACE(pattern string, handlerFunc HandlerFunc) {
 	z.router.addRoute(http.MethodTrace, pattern, handlerFunc)
 }
 
+// Use is defined to add middleware to the group
+func (z *Zen) Use(middlewares ...HandlerFunc) {
+	z.middlewares = append(z.middlewares, middlewares...)
+}
+
 // Start an http server
 func (z *Zen) Start(addr string) (err error) {
 	z.zenMutex.Lock()
@@ -109,7 +119,16 @@ func (z *Zen) GetHideBanner() bool {
 }
 
 func (z *Zen) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	//c := z.newContext(w, r)
+	//z.router.handle(c)
+	var middlewares []HandlerFunc
+	for _, group := range z.groups {
+		if strings.HasPrefix(r.URL.Path, group.prefix) {
+			middlewares = append(middlewares, group.middlewares...)
+		}
+	}
 	c := z.newContext(w, r)
+	c.middlewares = middlewares
 	z.router.handle(c)
 }
 
@@ -117,7 +136,7 @@ func (z *Zen) configureServer(s *http.Server) error {
 
 	if !z.HideBanner {
 		z.color.printF(banner, z.color.red("v"+version), z.color.red(github))
-		z.color.printF(fmt.Sprintf("=> port %s %s", z.color.red("[::]"), z.Server.Addr))
+		z.color.printF(fmt.Sprintf("=> port %s %s\n", z.color.red("[::]"), z.Server.Addr))
 	}
 
 	if z.Listener == nil {
