@@ -33,6 +33,10 @@ func (r *router) parsePattern(pattern string) []string {
 	return parts
 }
 
+func (r *router) Add(method, path string, handler HandlerFunc) {
+	r.addRoute(method, path, handler)
+}
+
 func (r *router) addRoute(method string, pattern string, handler HandlerFunc) {
 	parts := r.parsePattern(pattern)
 
@@ -43,6 +47,10 @@ func (r *router) addRoute(method string, pattern string, handler HandlerFunc) {
 	}
 	r.tree[method].insert(pattern, parts, 0)
 	r.handlers[key] = handler
+}
+
+func (r *router) Find(method, path string) (*node, map[string]string) {
+	return r.getRoute(method, path)
 }
 
 func (r *router) getRoute(method string, path string) (*node, map[string]string) {
@@ -74,7 +82,7 @@ func (r *router) getRoute(method string, path string) (*node, map[string]string)
 }
 
 func (r *router) handle(c *Context) {
-	n, params := r.getRoute(c.method, c.path)
+	n, params := r.Find(c.method, c.path)
 	if n != nil {
 		c.params = params
 		key := c.method + "-" + n.pattern

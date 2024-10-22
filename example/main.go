@@ -4,6 +4,7 @@ import (
 	"github.com/jeffcail/zen"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 //// curl http://127.0.0.1:8888/
@@ -29,7 +30,7 @@ func main() {
 
 	// curl http://127.0.0.1:8888/query?name=zen&email=zen@zen.com
 	z.GET("/query", func(c *zen.Context) {
-		c.Json(http.StatusOK, zen.H{
+		c.JSON(http.StatusOK, zen.H{
 			"name":  c.Query("name"),
 			"email": c.Query("email"),
 		})
@@ -43,6 +44,30 @@ func main() {
 	// curl http://127.0.0.1:8888/assets/css/demo.css
 	z.GET("/assets/*filepath", func(c *zen.Context) {
 		c.String(http.StatusOK, c.Param("filepath"))
+	})
+
+	// curl http://127.0.0.1:8888/put/12
+	z.PUT("/put/:id", func(c *zen.Context) {
+		var id = 10
+		v := c.Param("id")
+		av, err := strconv.Atoi(v)
+		if err != nil {
+			log.Fatalf("convert %s to int error: %v", v, err)
+		}
+		id = av
+		c.JSON(http.StatusOK, zen.H{
+			"message": "update id value is success",
+			"id":      id,
+		})
+	})
+
+	// curl http://127.0.0.1:8888/delete/12
+	z.DELETE("/delete/:id", func(c *zen.Context) {
+		id := c.Param("id")
+		c.JSON(http.StatusOK, zen.H{
+			"message": "delete id value is " + id,
+			"status":  "success",
+		})
 	})
 
 	// curl "http://127.0.0.1:8888/login" -X POST -d 'name=zen&email=zen@gmail.com'
@@ -61,7 +86,7 @@ func main() {
 			},
 		}
 
-		c.Json(http.StatusOK, d)
+		c.JSON(http.StatusOK, d)
 	})
 
 	if err := z.Start(":8888"); err != nil {

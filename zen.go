@@ -1,6 +1,7 @@
 package zen
 
 import (
+	"fmt"
 	"net"
 	"net/http"
 	"sync"
@@ -43,13 +44,43 @@ func (z *Zen) newContext(w http.ResponseWriter, r *http.Request) *Context {
 }
 
 // GET registers a new GET route for a path with matching handler in the router
-func (z *Zen) GET(pattern string, handler HandlerFunc) {
-	z.router.addRoute("GET", pattern, handler)
+func (z *Zen) GET(pattern string, handlerFunc HandlerFunc) {
+	z.router.Add(http.MethodGet, pattern, handlerFunc)
 }
 
 // POST registers a new POST route for a path with matching handler in the router
-func (z *Zen) POST(pattern string, handler HandlerFunc) {
-	z.router.addRoute("POST", pattern, handler)
+func (z *Zen) POST(pattern string, handlerFunc HandlerFunc) {
+	z.router.Add(http.MethodPost, pattern, handlerFunc)
+}
+
+// PUT registers a new PUT route for a path with matching handler in the router
+func (z *Zen) PUT(pattern string, handlerFunc HandlerFunc) {
+	z.router.Add(http.MethodPut, pattern, handlerFunc)
+}
+
+// HEAD registers a new HEAD route for a path with matching handler in the router
+func (z *Zen) HEAD(pattern string, handlerFunc HandlerFunc) {
+	z.router.addRoute(http.MethodHead, pattern, handlerFunc)
+}
+
+// OPTIONS registers a new OPTIONS route for a path with matching handler in the router
+func (z *Zen) OPTIONS(pattern string, handlerFunc HandlerFunc) {
+	z.router.addRoute(http.MethodOptions, pattern, handlerFunc)
+}
+
+// PATCH registers a new PATCH route for a path with matching handler in the router
+func (z *Zen) PATCH(pattern string, handlerFunc HandlerFunc) {
+	z.router.addRoute(http.MethodPatch, pattern, handlerFunc)
+}
+
+// DELETE registers a new DELETE route for a path with matching handler in the router
+func (z *Zen) DELETE(pattern string, handlerFunc HandlerFunc) {
+	z.router.addRoute(http.MethodDelete, pattern, handlerFunc)
+}
+
+// TRACE registers a new TRACE route for a path with matching handler in the router
+func (z *Zen) TRACE(pattern string, handlerFunc HandlerFunc) {
+	z.router.addRoute(http.MethodTrace, pattern, handlerFunc)
 }
 
 // Start an http server
@@ -82,6 +113,7 @@ func (z *Zen) configureServer(s *http.Server) error {
 
 	if !z.HideBanner {
 		z.color.printF(banner, z.color.red("v"+version), z.color.red(github))
+		z.color.printF(fmt.Sprintf("=> port %s %s", z.color.red("[::]"), z.Server.Addr))
 	}
 
 	if z.Listener == nil {

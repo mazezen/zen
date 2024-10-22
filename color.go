@@ -23,7 +23,6 @@ var (
 
 func outer(n string) inner {
 	return func(msg interface{}, styles []string, c *Color) string {
-		// TODO: Drop fmt to boost performance?
 		if c.disabled {
 			return fmt.Sprintf("%v", msg)
 		}

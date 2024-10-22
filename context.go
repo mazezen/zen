@@ -82,7 +82,7 @@ func (c *Context) String(code int, format string, values ...interface{}) {
 //				"name":  c.Query("name"),
 //				"email": c.Query("email"),
 //			})
-func (c *Context) Json(code int, content interface{}) {
+func (c *Context) JSON(code int, content interface{}) {
 	c.SetHeader(HeaderContentType, HeaderJson)
 	c.SetStatusCode(code)
 	if err := json.NewEncoder(c.w).Encode(content); err != nil {
