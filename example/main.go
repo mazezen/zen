@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/jeffcail/zen"
 	"github.com/jeffcail/zen/example/middlewares"
 	"log"
@@ -24,6 +25,8 @@ import (
 func main() {
 	z := zen.New()
 
+	z.Use(middlewares.Demo())
+
 	// curl http://127.0.0.1:8888
 	z.GET("/", func(c *zen.Context) {
 		c.HTML(http.StatusOK, "<h1>hello world</h1>")
@@ -39,8 +42,9 @@ func main() {
 
 	// curl http://127.0.0.1:8888/hello/zen
 	z.GET("/hello/:name", func(c *zen.Context) {
+		fmt.Println(c.Get("example"))
 		c.String(http.StatusOK, "hello %s, you are beautiful!", c.Param("name"))
-	})
+	}, middlewares.Demo())
 
 	// curl http://127.0.0.1:8888/assets/css/demo.css
 	z.GET("/assets/*filepath", func(c *zen.Context) {
@@ -95,7 +99,10 @@ func main() {
 	v2.Use(middlewares.Demo())
 	v2.GET("/demo", func(c *zen.Context) {
 		c.String(http.StatusOK, "demo router group!")
-	})
+		fmt.Println(c.Get("example"))
+		fmt.Println(c.Get("example2"))
+
+	}, middlewares.Demo(), middlewares.Demo2())
 
 	// curl "http://127.0.0.1:8888/v2/post" -X POST -d 'name=zen&email=zen@gmail.com'
 	v2.POST("/post", func(c *zen.Context) {

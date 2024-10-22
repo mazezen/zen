@@ -12,6 +12,23 @@ type HandlerFunc func(c *Context)
 
 type MiddlewareFunc func(c *Context) HandlerFunc
 
+type IZen interface {
+	GET(pattern string, h HandlerFunc, m ...HandlerFunc)
+	POST(pattern string, h HandlerFunc, m ...HandlerFunc)
+	PUT(pattern string, h HandlerFunc, m ...HandlerFunc)
+	HEAD(pattern string, h HandlerFunc, m ...HandlerFunc)
+	OPTIONS(pattern string, h HandlerFunc, m ...HandlerFunc)
+	PATCH(pattern string, h HandlerFunc, m ...HandlerFunc)
+	DELETE(pattern string, h HandlerFunc, m ...HandlerFunc)
+	TRACE(pattern string, h HandlerFunc, m ...HandlerFunc)
+	Use(middleware ...HandlerFunc)
+	Start(addr string) (err error)
+	SetHideBanner(b bool)
+	GetHideBanner() bool
+	ServeHTTP(w http.ResponseWriter, r *http.Request)
+	Group(prefix string) *Group
+}
+
 type Zen struct {
 	zenMutex sync.RWMutex
 	color    *Color
@@ -20,9 +37,9 @@ type Zen struct {
 	router   *router
 	pool     sync.Pool
 
-	HideBanner bool
-
 	middlewares []HandlerFunc
+
+	HideBanner bool
 
 	groups []*Group
 
@@ -53,42 +70,50 @@ func (z *Zen) newContext(w http.ResponseWriter, r *http.Request) *Context {
 }
 
 // GET registers a new GET route for a path with matching handler in the router
-func (z *Zen) GET(pattern string, handlerFunc HandlerFunc) {
+func (z *Zen) GET(pattern string, handlerFunc HandlerFunc, m ...HandlerFunc) {
+	z.Use(m...)
 	z.router.Add(http.MethodGet, pattern, handlerFunc)
 }
 
 // POST registers a new POST route for a path with matching handler in the router
-func (z *Zen) POST(pattern string, handlerFunc HandlerFunc) {
+func (z *Zen) POST(pattern string, handlerFunc HandlerFunc, m ...HandlerFunc) {
+	z.Use(m...)
 	z.router.Add(http.MethodPost, pattern, handlerFunc)
 }
 
 // PUT registers a new PUT route for a path with matching handler in the router
-func (z *Zen) PUT(pattern string, handlerFunc HandlerFunc) {
+func (z *Zen) PUT(pattern string, handlerFunc HandlerFunc, m ...HandlerFunc) {
+	z.Use(m...)
 	z.router.Add(http.MethodPut, pattern, handlerFunc)
 }
 
 // HEAD registers a new HEAD route for a path with matching handler in the router
-func (z *Zen) HEAD(pattern string, handlerFunc HandlerFunc) {
+func (z *Zen) HEAD(pattern string, handlerFunc HandlerFunc, m ...HandlerFunc) {
+	z.Use(m...)
 	z.router.addRoute(http.MethodHead, pattern, handlerFunc)
 }
 
 // OPTIONS registers a new OPTIONS route for a path with matching handler in the router
-func (z *Zen) OPTIONS(pattern string, handlerFunc HandlerFunc) {
+func (z *Zen) OPTIONS(pattern string, handlerFunc HandlerFunc, m ...HandlerFunc) {
+	z.Use(m...)
 	z.router.addRoute(http.MethodOptions, pattern, handlerFunc)
 }
 
 // PATCH registers a new PATCH route for a path with matching handler in the router
-func (z *Zen) PATCH(pattern string, handlerFunc HandlerFunc) {
+func (z *Zen) PATCH(pattern string, handlerFunc HandlerFunc, m ...HandlerFunc) {
+	z.Use(m...)
 	z.router.addRoute(http.MethodPatch, pattern, handlerFunc)
 }
 
 // DELETE registers a new DELETE route for a path with matching handler in the router
-func (z *Zen) DELETE(pattern string, handlerFunc HandlerFunc) {
+func (z *Zen) DELETE(pattern string, handlerFunc HandlerFunc, m ...HandlerFunc) {
+	z.Use(m...)
 	z.router.addRoute(http.MethodDelete, pattern, handlerFunc)
 }
 
 // TRACE registers a new TRACE route for a path with matching handler in the router
-func (z *Zen) TRACE(pattern string, handlerFunc HandlerFunc) {
+func (z *Zen) TRACE(pattern string, handlerFunc HandlerFunc, m ...HandlerFunc) {
+	z.Use(m...)
 	z.router.addRoute(http.MethodTrace, pattern, handlerFunc)
 }
 
@@ -119,14 +144,19 @@ func (z *Zen) GetHideBanner() bool {
 }
 
 func (z *Zen) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	//c := z.newContext(w, r)
-	//z.router.handle(c)
 	var middlewares []HandlerFunc
-	for _, group := range z.groups {
-		if strings.HasPrefix(r.URL.Path, group.prefix) {
-			middlewares = append(middlewares, group.middlewares...)
+	if len(z.groups) > 0 {
+		for _, group := range z.groups {
+			if strings.HasPrefix(r.URL.Path, group.prefix) {
+				middlewares = append(middlewares, group.middlewares...)
+			}
 		}
 	}
+
+	if len(z.middlewares) > 0 {
+		middlewares = append(middlewares, z.middlewares...)
+	}
+
 	c := z.newContext(w, r)
 	c.middlewares = middlewares
 	z.router.handle(c)
