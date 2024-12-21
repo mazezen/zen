@@ -1,3 +1,5 @@
+github.com/jeffcail/zen v0.0.0-20241022100039-18d6c15535fb h1:iqoiESIV31qzz1HtvmoOlGBGCGAkMDfe2EHsY3CtUnw=
+github.com/jeffcail/zen v0.0.0-20241022100039-18d6c15535fb/go.mod h1:Cc1L4qkA7BM3/nsNwOEBOYnXV35Y9rzO6o83+IU8BeU=
 github.com/mattn/go-colorable v0.1.13 h1:fFA4WZxdEF4tXPZVKMLwD8oUnCTTo08duU7wxecdEvA=
 github.com/mattn/go-colorable v0.1.13/go.mod h1:7S9/ev0klgBDR4GtXTXX8a3vIGJpMovkB8vQcUbaXHg=
 github.com/mattn/go-isatty v0.0.16/go.mod h1:kYGgaQfpe5nmfYZH+SKPsOc2e4SrIfOl2e/yFXSvRLM=

@@ -2,7 +2,7 @@ package middlewares
 
 import (
 	"fmt"
-	"github.com/jeffcail/zen"
+	"github.com/mazezen/zen"
 )
 
 func Demo() zen.HandlerFunc {

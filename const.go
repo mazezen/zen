@@ -15,7 +15,7 @@ const (
 
 const (
 	version = "0.0.1"
-	github  = "https://github.com/jeffcail/zen"
+	github  = "https://github.com/mazezen/zen"
 	banner  = `
 ------------------------------
     ___    ___    _ _    

@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"github.com/jeffcail/zen"
-	"github.com/jeffcail/zen/example/middlewares"
+	"github.com/mazezen/zen"
+	"github.com/mazezen/zen/example/middlewares"
 	"log"
 	"net/http"
 	"strconv"

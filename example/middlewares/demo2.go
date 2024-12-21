@@ -1,7 +1,7 @@
 package middlewares
 
 import (
-	"github.com/jeffcail/zen"
+	"github.com/mazezen/zen"
 	"log"
 	"time"
 )
